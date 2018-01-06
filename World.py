@@ -16,7 +16,7 @@ class World:
         for currentY in range(self.y):
             for currentX in range(self.x):
                 name = currentX, currentY
-                new_cell = Cell.Cell(currentX, currentY, name.__str__())
+                new_cell = Cell.Cell(str(name))
 
                 previous_cell = self.find_previous_cell(currentX)
                 """
@@ -70,14 +70,4 @@ class World:
         if agent_type is "sarsa":
             self.agent = SarsaAgent.SarsaAgent(self.start_cell, epsilon, alpha, gamma)
 
-
-    def print_grid(self):
-        i = 0
-        string = ""
-        for cell in self.gamegrid:
-            if i % self.x is 0:
-
-                string+="\n"
-            string += str(cell)
-            i += 1
 

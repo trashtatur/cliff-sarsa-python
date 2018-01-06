@@ -1,8 +1,6 @@
 import kivy
 import threading
-
 from kivy.clock import Clock
-
 import World
 from kivy.app import App
 from kivy.uix.label import Label
@@ -64,17 +62,17 @@ class GridLabelCellHolder(GridLayout):
 
         if self.id is "start" or self.id is "normal":
             self.add_widget(Label(id="buffer"))
-            self.add_widget(Label(text="0", id="qval_top", text_size=(25, 15), shorten_from="right"))
+            self.add_widget(Label(text=" ", id="qval_top"))
             self.add_widget(Label(id="buffer"))
-            self.add_widget(Label(text="0", id="qval_left", text_size=(25, 15), shorten_from="right"))
+            self.add_widget(Label(text=" ", id="qval_left"))
             if self.id is "start":
                 self.add_widget(Button(id="Agent", background_normal='', background_color=[248 / 255, 255 / 255, 0, 1]))
             else:
                 self.add_widget(Button(id="agentPlaceholder", background_normal='', background_color=[0, 0, 0, 0]))
 
-            self.add_widget(Label(text="0", id="qval_right", text_size=(25, 15), shorten_from="right"))
+            self.add_widget(Label(text=" ", id="qval_right"))
             self.add_widget(Label(id="buffer"))
-            self.add_widget(Label(text="0", id="qval_bottom", text_size=(25, 15), shorten_from="right"))
+            self.add_widget(Label(text=" ", id="qval_bottom"))
 
     def update_qval(self, direction, new_value):
 
@@ -94,7 +92,7 @@ class GridLabelCellHolder(GridLayout):
         if self.id is "normal" or self.id is "start":
             for qval in self.children:
                 if "qval" in qval.id:
-                    qval.text = "0"
+                    qval.text = " "
 
 
 class GameGridApp(App):
@@ -105,9 +103,12 @@ class GameGridApp(App):
         self.window_container = BoxLayout(orientation="vertical")
         self.config = BoxLayout(orientation="horizontal", spacing=10, size_hint=(1, 0.08))
         self.display = BoxLayout(id="display", orientation="horizontal", spacing=10, size_hint=(1, 0.08))
+        self.is_playing = None
+        self.time_delay = 2
         self.current_cell = None
         self.generationField = None
         self.scoreField = None
+        self.exploreField = None
         self.deathField = None
         self.algoTypeField = None
         self.world = World.World(c, r)
@@ -158,6 +159,11 @@ class GameGridApp(App):
                                                                               alpha.text,
                                                                               epsilon.text,
                                                                               gamma.text)))
+
+        self.config.add_widget(Button(text="PLAY/PAUSE",
+                                      background_normal="",
+                                      background_color=[0 / 255, 140 / 255, 165 / 255, 1],
+                                      on_press=lambda a: self.pause_resume()))
 
     def build_dropdown(self):
 
@@ -224,6 +230,14 @@ class GameGridApp(App):
                                     background_color=[0 / 255, 203 / 255, 255 / 255, 0.5])
         self.display.add_widget(self.deathField)
 
+        self.display.add_widget(Label(text="explore"))
+        self.exploreField = (TextInput(id="explore",
+                                       readonly=True,
+                                       text="0",
+                                       multiline=False,
+                                       background_color=[0 / 255, 203 / 255, 255 / 255, 0.5]))
+        self.display.add_widget(self.exploreField)
+
     def load_windows(self):
         self.window_container.add_widget(self.config)
         self.window_container.add_widget(self.display)
@@ -244,17 +258,21 @@ class GameGridApp(App):
             pre = int(pretraining)
 
         if agent_type is not "Choose":
-
+            self.generationField.text = "0"
+            self.deathField.text = "0"
+            self.exploreField.text = "0"
             self.algoTypeField.text = agent_type
             self.reset_all_qvals()
             self.world.add_agent(agent_type, eps, al, ga)
             self.world.do_pretraining(pre)
+            self.generationField.text = str(pre)
             self.update_all_qvals()
             threading.Thread(target=self.do_the_loop()).start()
 
     def update_display(self):
         self.deathField.text = str(self.world.agent.deaths)
         self.scoreField.text = str(self.world.agent.score)
+        self.exploreField.text = str(self.world.agent.ai.explore)
 
     def update_callback(self, dt):
         new_cell_name = self.world.agent.update_status()
@@ -268,12 +286,23 @@ class GameGridApp(App):
         gen_int += 1
         self.generationField.text = str(gen_int)
 
+    def pause_resume(self):
+        if self.algoTypeField.text is not "":
+            if self.is_playing is None:
+                self.do_the_loop()
+            else:
+                self.is_playing.cancel()
+                self.is_playing = None
+
     def do_the_loop(self):
-        Clock.schedule_interval(self.update_callback, 2)
+
+        self.is_playing = Clock.schedule_interval(self.update_callback, self.time_delay)
 
     def update_all_qvals(self):
         for key, value, in self.world.agent.ai.qvalues:
             qval = str(self.world.agent.ai.qvalues[key, value])
+            if len(qval) > 6:
+                qval = qval[:6]+".."
             cell = self.find_cell(key)
             action = value
             cell.update_qval(action, qval)
@@ -339,5 +368,3 @@ class GameGridApp(App):
         return self.window_container
 
 
-customLabel = GameGridApp(5, 3)
-customLabel.run()

@@ -1,13 +1,17 @@
 import random
 from abc import ABCMeta, abstractmethod
 
+import numpy
+
 
 class Learner(metaclass=ABCMeta):
     """
     :param actions : the actions the agent can take in its given state
     :param epsilon : the exploration value. Default is 0.1 which is 10%
-    :param alpha : the immediate reward
-    :param gamma : the restrain bla
+    :param alpha : the learning value. Should be between 0 and 1. Closer to 0 than 1
+                   indicates how much a utility value is updated when an action is taken
+    :param gamma : the discount factor. Encourages the agent to go for bigger future rewards.
+                   Should be between 0 and 1. Preferably 0.9 or 0.99
     """
     @abstractmethod
     def __init__(self, actions, epsilon, alpha, gamma):
@@ -17,6 +21,7 @@ class Learner(metaclass=ABCMeta):
         self.alpha = alpha
         self.gamma = gamma
         self.actions = actions
+        self.explore = 0
 
     def get_qvalue(self, state, action):
         return self.qvalues.get((state, action), 0.0)
@@ -24,9 +29,9 @@ class Learner(metaclass=ABCMeta):
     def choose_action(self, state):
 
         # if this happens then do random exploration
-        if random.random() < self.epsilon:
+        if random.choice(numpy.arange(0.01, 1, 0.01)) < self.epsilon:
             action = random.choice(self.actions)
-
+            self.explore += 1
         else:
 
             qvalues = [self.get_qvalue(state, a) for a in self.actions]
@@ -51,6 +56,3 @@ class Learner(metaclass=ABCMeta):
         else:
             self.qvalues[(state, action)] = oldvalue + self.alpha * (value - oldvalue)
 
-    @abstractmethod
-    def learn(self, state1, action1, reward, state2, action2):
-        pass
