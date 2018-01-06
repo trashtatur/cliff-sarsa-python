@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 cliffReward = -50
-normalReward = -1
+step_costs = -1
 goalReward = +50
 
 
@@ -40,33 +40,9 @@ class Agent(metaclass=ABCMeta):
             self.score += 1
             return goalReward
         else:
-            return normalReward
+            return step_costs
 
-    def update_status(self):
-        reward = self.define_reward()
-        state = self.define_state()
-        action = self.ai.choose_action(state)
 
-        if self.previous_action is not None:
-            self.ai.learn(self.previous_state, self.previous_action, reward, state, action)
-
-        self.previous_state = state
-        self.previous_action = action
-
-        if self.cell.cliff or self.cell.goal:
-            self.cell = self.start
-            self.previous_action = None
-        else:
-            if action is 1:
-                self.move_up()
-            if action is 2:
-                self.move_left()
-            if action is 3:
-                self.move_right()
-            if action is 4:
-                self.move_down()
-
-        return self.cell.name
 
 
     def move_up(self):

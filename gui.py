@@ -156,8 +156,8 @@ class GameGridApp(App):
                                       background_color=[0 / 255, 140 / 255, 165 / 255, 1],
                                       on_press=lambda a: self.reset_and_start(choose.text,
                                                                               pre.text,
-                                                                              alpha.text,
                                                                               epsilon.text,
+                                                                              alpha.text,
                                                                               gamma.text)))
 
         self.config.add_widget(Button(text="PLAY/PAUSE",
