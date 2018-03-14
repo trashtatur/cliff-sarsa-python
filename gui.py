@@ -47,7 +47,7 @@ class GridLabelCellHolder(GridLayout):
             self.add_widget(Label(id="buffer"))
             self.add_widget(Label(id="buffer"))
             self.add_widget(Label(id="buffer"))
-            self.add_widget(Label(text="c(-50)"))
+            self.add_widget(Label(text="c (-100)"))
             self.add_widget(Label(id="buffer"))
             self.add_widget(Label(id="buffer"))
 
@@ -104,7 +104,7 @@ class GameGridApp(App):
         self.config = BoxLayout(orientation="horizontal", spacing=10, size_hint=(1, 0.08))
         self.display = BoxLayout(id="display", orientation="horizontal", spacing=10, size_hint=(1, 0.08))
         self.is_playing = None
-        self.time_delay = 2
+        self.time_delay = 0.5
         self.current_cell = None
         self.generationField = None
         self.scoreField = None
@@ -133,6 +133,9 @@ class GameGridApp(App):
                           input_filter="float",
                           background_color=[0 / 255, 203 / 255, 255 / 255, 0.5])
         self.config.add_widget(alpha)
+        self.config.add_widget(Button(text="set α",
+                                      background_color=[0 / 255, 203 / 255, 255 / 255, 0.5],
+                                      on_press=lambda x: self.adjust_alpha(alpha.text)))
 
         epsilon = TextInput(id="explore",
                             hint_text="ε value (=0.1)",
@@ -140,6 +143,9 @@ class GameGridApp(App):
                             input_filter="float",
                             background_color=[0 / 255, 203 / 255, 255 / 255, 0.5])
         self.config.add_widget(epsilon)
+        self.config.add_widget(Button(text="set ε",
+                                      background_color=[0 / 255, 203 / 255, 255 / 255, 0.5],
+                                      on_press=lambda x: self.adjust_epsilon(epsilon.text)))
 
         gamma = TextInput(id="gamma",
                           hint_text="γ value (=0.9)",
@@ -147,6 +153,10 @@ class GameGridApp(App):
                           input_filter="float",
                           background_color=[0 / 255, 203 / 255, 255 / 255, 0.5])
         self.config.add_widget(gamma)
+        self.config.add_widget(Button(text="set γ",
+                                      background_color=[0 / 255, 203 / 255, 255 / 255, 0.5],
+                                      on_press=lambda x: self.adjust_gamma(gamma.text)
+                                      ))
 
         choose = self.build_dropdown()
         self.config.add_widget(choose)
@@ -164,6 +174,21 @@ class GameGridApp(App):
                                       background_normal="",
                                       background_color=[0 / 255, 140 / 255, 165 / 255, 1],
                                       on_press=lambda a: self.pause_resume()))
+
+
+    def adjust_gamma(self,text):
+        if text is not "":
+            self.world.agent.ai.gamma = float(text)
+            print(self.world.agent.ai.gamma)
+
+    def adjust_alpha(self,text):
+        if text is not "":
+            self.world.agent.ai.alpha = float(text)
+
+    def adjust_epsilon(self,text):
+        if text is not "":
+            self.world.agent.ai.epsilon = float(text)
+            print(self.world.agent.ai.epsilon)
 
     def build_dropdown(self):
 
@@ -258,6 +283,8 @@ class GameGridApp(App):
             pre = int(pretraining)
 
         if agent_type is not "Choose":
+            if self.is_playing is not None:
+                self.is_playing.cancel()
             self.generationField.text = "0"
             self.deathField.text = "0"
             self.exploreField.text = "0"
@@ -265,6 +292,8 @@ class GameGridApp(App):
             self.reset_all_qvals()
             self.world.add_agent(agent_type, eps, al, ga)
             self.world.do_pretraining(pre)
+            if pre is not 0:
+                self.set_agent_pos(self.world.agent.cell.name)
             self.generationField.text = str(pre)
             self.update_all_qvals()
             threading.Thread(target=self.do_the_loop()).start()

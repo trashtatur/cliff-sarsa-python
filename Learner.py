@@ -29,22 +29,25 @@ class Learner(metaclass=ABCMeta):
     def choose_action(self, state):
 
         # if this happens then do random exploration
-        if random.choice(numpy.arange(0.01, 1, 0.01)) < self.epsilon:
-            action = random.choice(self.actions)
-            self.explore += 1
+
+        qvalues = [self.get_qvalue(state, a) for a in self.actions]
+        maximum_qvalue = max(qvalues)
+
+        if qvalues.count(maximum_qvalue) > 1:
+            best = [i for i in range(len(self.actions)) if qvalues[i] == maximum_qvalue]
+            indicator = random.choice(best)
         else:
+            # get that one maximum q value to determine the action
+            indicator = qvalues.index(maximum_qvalue)
 
-            qvalues = [self.get_qvalue(state, a) for a in self.actions]
-            maximum_qvalue = max(qvalues)
+        # if not already happened determine the action
+        action = self.actions[indicator]
 
-            if qvalues.count(maximum_qvalue) > 1:
-                best = [i for i in range(len(self.actions)) if qvalues[i] == maximum_qvalue]
-                indicator = random.choice(best)
-            else:
-                # get that one maximum q value to determine the action
-                indicator = qvalues.index(maximum_qvalue)
-            # if not already happened determine the action
-            action = self.actions[indicator]
+        if random.choice(numpy.arange(0.01, 1, 0.01)) <= self.epsilon:
+            rest_actions = list(self.actions)
+            list.pop(rest_actions, indicator)
+            action = random.choice(rest_actions)
+            self.explore += 1
 
         return action
 

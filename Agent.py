@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-cliffReward = -50
+cliffReward = -100
 step_costs = -1
 goalReward = +50
 
