@@ -4,12 +4,6 @@ A program implementing the sarsa and qlearning algorithms in python with a kivy 
 
 Dependancies: 
 
-- kivy
-
-``pip install kivy``
-
-- numpy
-
-``pip install numpy``
+`` pip install requirements.txt``
 
 to get it
